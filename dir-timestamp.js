@@ -10,17 +10,14 @@ if (process.argv.length < 3) {
 function recurse(path) {
 	const stats = statSync(path);
 	if (stats.isFile()) {
-		return stats.mtimeMs;
+		return stats.mtimeMs / 1000;
 	}
 	if (stats.isDirectory()) {
-		let max = 0;
-		readdirSync(path).forEach(child => {
-			max = Math.max(max, recurse(path + '/' + child));
-		});
+		const max = readdirSync(path).reduce((max, child) => Math.max(max, recurse(path + '/' + child)), 0);
 		if (max === 0) {
 			throw new Error(`Empty directory: ${path}`);
 		}
-		utimesSync(path, max / 1000, max / 1000);
+		utimesSync(path, max, max);
 		return max;
 	}
 	throw new Error(`Unexpected type: ${path}`);
